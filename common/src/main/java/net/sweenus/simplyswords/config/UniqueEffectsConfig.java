@@ -60,6 +60,9 @@ public class UniqueEffectsConfig implements ConfigData {
     @ConfigEntry.Gui.PrefixText
     public float stormChance = 15f;
     public float stormRadius = 10f;
+    public float stormCooldown = 700f;
+    public float stormFrequency = 10f;
+    public float stormDuration = 200f;
 
     @ConfigEntry.Gui.PrefixText
     public float plagueChance = 55f;
@@ -69,7 +72,6 @@ public class UniqueEffectsConfig implements ConfigData {
 
     @ConfigEntry.Gui.PrefixText
     public float brambleChance = 45f;
-    public float brambleRadius = 10f;
 
     @ConfigEntry.Gui.PrefixText
     public float soultetherRange = 32f;
@@ -223,5 +225,33 @@ public class UniqueEffectsConfig implements ConfigData {
     @ConfigEntry.Gui.PrefixText
     public float ribbonwrathCooldown = 40f;
     public float ribbonwrathResilienceAmplifier = 1f;
+    public float ribbonwrathDamageBonusPercent = 0.95f;
+
+    @ConfigEntry.Gui.PrefixText
+    public float magistormCooldown = 980f;
+    public float magistormDuration = 400f;
+    public float magistormRadius = 4f;
+    public float magistormDamage = 3f;
+    public float magistormRepairChance = 0.25f;
+    public float magistormSpellScaling = 0.5f;
+
+    @ConfigEntry.Gui.PrefixText
+    public float enigmaCooldown = 800f;
+    public float enigmaDecayRate = 2f;
+    public float enigmaChaseRadius = 16f;
+
+    @ConfigEntry.Gui.PrefixText
+    public float magibladeCooldown = 35;
+    public float magibladeSonicDistance = 16f;
+    public float magibladeDamageModifier = 0.7f;
+    public float magibladeRepelChance = 55f;
+    public float magibladeRepelRadius = 4f;
+
+    @ConfigEntry.Gui.PrefixText
+    public float magislamCooldown = 140;
+    public float magislamRadius = 4f;
+    public float magislamDamageModifier = 2.0f;
+    public float magislamMagicChance = 35f;
+    public float magislamMagicModifier = 0.5f;
 
 }

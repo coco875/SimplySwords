@@ -57,6 +57,9 @@ public class ConfigDefaultValues {
     
     public static float stormChance = 15f;
     public static float stormRadius = 10f;
+    public static float stormCooldown = 700f;
+    public static float stormFrequency = 10f;
+    public static float stormDuration = 200f;
 
     
     public static float plagueChance = 55f;
@@ -66,7 +69,6 @@ public class ConfigDefaultValues {
 
     
     public static float brambleChance = 45f;
-    public static float brambleRadius = 10f;
 
     
     public static float soultetherRange = 32f;
@@ -213,6 +215,30 @@ public class ConfigDefaultValues {
 
     public static float ribbonwrathCooldown = 40f;
     public static float ribbonwrathResilienceAmplifier = 1f;
+    public static float ribbonwrathDamageBonusPercent = 0.95f;
+
+    public static float magistormCooldown = 40f;
+    public static float magistormDuration = 400f;
+    public static float magistormRadius = 4f;
+    public static float magistormDamage = 3f;
+    public static float magistormRepairChance = 0.25f;
+    public static float magistormSpellScaling = 0.5f;
+
+    public static float enigmaCooldown = 800f;
+    public static float enigmaDecayRate = 2f;
+    public static float enigmaChaseRadius = 16f;
+
+    public static float magibladeCooldown = 35;
+    public static float magibladeSonicDistance = 16f;
+    public static float magibladeDamageModifier = 0.7f;
+    public static float magibladeRepelChance = 0.55f;
+    public static float magibladeRepelRadius = 4f;
+
+    public static float magislamCooldown = 140;
+    public static float magislamRadius = 4f;
+    public static float magislamDamageModifier = 2.0f;
+    public static float magislamMagicChance = 35f;
+    public static float magislamMagicModifier = 0.5f;
     
     // -- WEAPON ATTRIBUTES -- //
 
@@ -302,7 +328,7 @@ public class ConfigDefaultValues {
     public static float stormsedge_damageModifier = 3.0f;
     public static float stormbringer_damageModifier = 3.0f;
     public static float swordonastick_damageModifier = 5.0f;
-    public static float bramblethorn_damageModifier = 6.0f;
+    public static float bramblethorn_damageModifier = 3.0f;
     public static float watchingwarglaive_damageModifier = 3.0f;
     public static float longswordofplague_damageModifier = 3.0f;
     public static float emberblade_damageModifier = 3.0f;
@@ -333,6 +359,10 @@ public class ConfigDefaultValues {
     public static float tempest_damageModifier = 0.0f;
     public static float flamewind_damageModifier = 3.0f;
     public static float ribboncleaver_damageModifier = 7.0f;
+    public static float magiscythe_damageModifier = 4.0f;
+    public static float enigma_damageModifier = 7.0f;
+    public static float magispear_damageModifier = 4.0f;
+    public static float magiblade_damageModifier = 3.0f;
 
     
     public static float brimstone_attackSpeed = -2.8f;
@@ -371,6 +401,10 @@ public class ConfigDefaultValues {
     public static float tempest_attackSpeed = -2.5f;
     public static float flamewind_attackSpeed = -2.6f;
     public static float ribboncleaver_attackSpeed = -3.2f;
+    public static float magiscythe_attackSpeed = -2.4f;
+    public static float enigma_attackSpeed = -3.2f;
+    public static float magispear_attackSpeed = -2.5f;
+    public static float magiblade_attackSpeed = -2.0f;
     
     // -- STATUS EFFECTS --
 
@@ -488,6 +522,7 @@ public class ConfigDefaultValues {
     
     public static float uniqueLootTableWeight = 0.001f;
     public static boolean enableWatchingWarglaive = true;
+    public static boolean enableContainedRemnants = true;
     public static boolean enableLongswordOfThePlague = true;
     public static boolean enableSwordOnAStick = true;
     public static boolean enableBramblethorn = true;

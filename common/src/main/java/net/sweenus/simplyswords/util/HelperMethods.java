@@ -5,6 +5,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.Tameable;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -25,6 +29,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.sweenus.simplyswords.SimplySwords;
 import net.sweenus.simplyswords.SimplySwordsExpectPlatform;
 import net.sweenus.simplyswords.config.Config;
 import net.sweenus.simplyswords.config.ConfigDefaultValues;
@@ -34,9 +39,9 @@ import net.sweenus.simplyswords.entity.BattleStandardEntity;
 import net.sweenus.simplyswords.registry.ItemsRegistry;
 import net.sweenus.simplyswords.registry.SoundRegistry;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+import static net.sweenus.simplyswords.SimplySwords.minimumSpellPowerVersion;
 
 public class HelperMethods {
 
@@ -461,34 +466,157 @@ public class HelperMethods {
     }
 
     public static void spawnWaistHeightParticles(ServerWorld world, ParticleEffect particle, Entity entity1, Entity entity2, int count) {
-        Vec3d startPos = entity1.getPos().add(0, entity1.getHeight() / 2.0, 0); // Waist height of entity1
-        Vec3d endPos = entity2.getPos().add(0, entity2.getHeight() / 2.0, 0); // Waist height of entity2
+        Vec3d startPos = entity1.getPos().add(0, entity1.getHeight() / 2.0, 0);
+        Vec3d endPos = entity2.getPos().add(0, entity2.getHeight() / 2.0, 0);
         Vec3d direction = endPos.subtract(startPos);
         double distance = direction.length();
         Vec3d normalizedDirection = direction.normalize();
 
-        // We'll spawn particles along the line segment, ensuring even distribution
         for (int i = 0; i < count; i++) {
-            // Calculate the interpolation factor (0.0 to 1.0) for the current particle
             double lerpFactor = (double) i / (count - 1);
-            // Calculate the position for this particle using linear interpolation
             Vec3d currentPos = startPos.add(normalizedDirection.multiply(distance * lerpFactor));
-            // Spawn the particle at the calculated position
             world.spawnParticles(particle,
-                    currentPos.x, currentPos.y, currentPos.z, // The position to spawn the particle
-                    1, // The number of particles to spawn
-                    0, 0, 0, // The particle's delta (motion) in each direction (set to 0 for no motion)
-                    0.0); // The particle's speed (set to 0 for no motion)
+                    currentPos.x, currentPos.y, currentPos.z,
+                    1,
+                    0, 0, 0,
+                    0.0);
+        }
+    }
+
+    public static void spawnRainingParticles(ServerWorld world, ParticleEffect particle, Entity entity2, int count, double blocksAbove) {
+        Vec3d endPos = entity2.getPos().add(0, entity2.getHeight() / 2.0, 0);
+        Vec3d startPos = endPos.add(0, blocksAbove, 0);
+        Vec3d direction = endPos.subtract(startPos);
+        double distance = direction.length();
+        Vec3d normalizedDirection = direction.normalize();
+
+        for (int i = 0; i < count; i++) {
+            double lerpFactor = (double) i / (count - 1);
+            Vec3d currentPos = startPos.add(normalizedDirection.multiply(distance * lerpFactor));
+            world.spawnParticles(particle,
+                    currentPos.x, currentPos.y, currentPos.z,
+                    1,
+                    0, 0, 0,
+                    0.0);
         }
     }
 
 
     public static float commonSpellAttributeScaling(float damageModifier, Entity entity, String magicSchool) {
         if (Platform.isModLoaded("spell_power") && Platform.isFabric())
-            if ((entity instanceof PlayerEntity player) && Config.getBoolean("compatEnableSpellPowerScaling", "General",ConfigDefaultValues.compatEnableSpellPowerScaling))
+            if ((entity instanceof PlayerEntity player) && Config.getBoolean("compatEnableSpellPowerScaling", "General",ConfigDefaultValues.compatEnableSpellPowerScaling) && SimplySwords.passVersionCheck("spell_power", minimumSpellPowerVersion))
                 return SimplySwordsExpectPlatform.getSpellPowerDamage(damageModifier, player, magicSchool);
 
         return 0f;
+    }
+
+    public static Optional<LivingEntity> findClosestTarget(LivingEntity livingEntity, double maxDistance, double width) {
+        World world = livingEntity.getEntityWorld();
+        Vec3d eyePosition = livingEntity.getEyePos();
+        Vec3d lookVec = livingEntity.getRotationVec(1.0F);
+        Vec3d targetVec = eyePosition.add(lookVec.x * maxDistance, lookVec.y * maxDistance, lookVec.z * maxDistance);
+
+        // Calculate the perpendicular vector to the lookVec for the width
+        Vec3d perpVec = new Vec3d(-lookVec.z, 0, lookVec.x).normalize().multiply(width / 2.0);
+
+        // Create a search box that extends along the look vector with the specified width
+        Box searchBox = new Box(
+                eyePosition.subtract(perpVec.x, 1.0, perpVec.z),
+                targetVec.add(perpVec.x, 1.0, perpVec.z)
+        );
+
+        // Find living entities within the search box, excluding the player
+        List<LivingEntity> entities = world.getEntitiesByClass(LivingEntity.class, searchBox, e -> e != livingEntity);
+
+        // Find the closest living entity to the player
+        return entities.stream()
+                .min(Comparator.comparingDouble(e -> e.squaredDistanceTo(livingEntity)));
+    }
+
+    public static List<LivingEntity> getNearbyLivingEntities(World world, Vec3d position, double radius) {
+        Box searchBox = new Box(position.x - radius, position.y - radius, position.z - radius,
+                position.x + radius, position.y + radius, position.z + radius);
+        return world.getEntitiesByClass(LivingEntity.class, searchBox, entity -> true);
+    }
+
+    //Get Item attack damage
+    public static double getAttackDamage(ItemStack stack){
+        return stack.getItem().getAttributeModifiers(EquipmentSlot.MAINHAND)
+                .get(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                .stream()
+                .mapToDouble(EntityAttributeModifier::getValue)
+                .sum();
+    }
+
+    public static void applyDamageWithoutKnockback(LivingEntity target, DamageSource source, float amount) {
+        EntityAttributeInstance knockbackResistance = target.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
+        double originalKnockbackResistance = 0;
+        if (knockbackResistance != null) {
+            originalKnockbackResistance = knockbackResistance.getValue();
+            knockbackResistance.setBaseValue(1.0);
+        }
+        try {
+            target.damage(source, amount);
+        } finally {
+            if (knockbackResistance != null) {
+                knockbackResistance.setBaseValue(originalKnockbackResistance);
+            }
+        }
+    }
+
+    public static void spawnDirectionalParticles(ServerWorld world, ParticleEffect particle, Entity entity, int count, double distance) {
+        Vec3d startPos = entity.getPos().add(0, entity.getHeight() / 2.0, 0);
+
+        float pitch = entity.getPitch(1.0F);
+        float yaw = entity.getYaw(1.0F);
+
+        double pitchRadians = Math.toRadians(pitch);
+        double yawRadians = Math.toRadians(yaw);
+
+        double xDirection = -Math.sin(yawRadians) * Math.cos(pitchRadians);
+        double yDirection = -Math.sin(pitchRadians);
+        double zDirection = Math.cos(yawRadians) * Math.cos(pitchRadians);
+        Vec3d direction = new Vec3d(xDirection, yDirection, zDirection).normalize();
+
+        for (int i = 0; i < count; i++) {
+            double lerpFactor = (double) i / (count - 1);
+            Vec3d currentPos = startPos.add(direction.multiply(distance * lerpFactor));
+            world.spawnParticles(particle,
+                    currentPos.x, currentPos.y, currentPos.z,
+                    1,
+                    0, 0, 0,
+                    0.0);
+        }
+    }
+
+    public static void damageEntitiesInTrajectory(ServerWorld world, Entity sourceEntity, double distance, float damage, DamageSource damageSource) {
+        Vec3d startPos = sourceEntity.getPos().add(0, sourceEntity.getHeight() / 2.0, 0);
+        float pitch = sourceEntity.getPitch(1.0F);
+        float yaw = sourceEntity.getYaw(1.0F);
+
+        double pitchRadians = Math.toRadians(pitch);
+        double yawRadians = Math.toRadians(yaw);
+
+        double xDirection = -Math.sin(yawRadians) * Math.cos(pitchRadians);
+        double yDirection = -Math.sin(pitchRadians);
+        double zDirection = Math.cos(yawRadians) * Math.cos(pitchRadians);
+        Vec3d direction = new Vec3d(xDirection, yDirection, zDirection).normalize();
+
+        Vec3d endPos = startPos.add(direction.multiply(distance));
+
+        double boxSize = 0.5;
+        Box searchBox = new Box(startPos, endPos).expand(boxSize);
+
+        for (Entity entity : world.getOtherEntities(sourceEntity, searchBox)) {
+            Box entityBox = entity.getBoundingBox().expand(entity.getTargetingMargin());
+            if (entityBox.intersects(searchBox)) {
+                if ((sourceEntity instanceof LivingEntity livingEntity)
+                        && (entity instanceof LivingEntity livingTarget)
+                        && HelperMethods.checkFriendlyFire(livingTarget, livingEntity)) {
+                    livingTarget.damage(damageSource, damage);
+                }
+            }
+        }
     }
 
 }
